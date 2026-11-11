@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course aux Notes — Apprendre à lire la clé de sol</title>
+<style>
+  :root {
+    --fond: #1e2a4a;
+    --carte: #ffffff;
+    --accent: #ff6b6b;
+    --vert: #2ecc71;
+    --jaune: #ffd93d;
+    --texte: #2d3436;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #1e2a4a 0%, #35507e 60%, #4a6ba3 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .carte {
+    background: var(--carte);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    width: 100%;
+    max-width: 560px;
+    padding: 28px;
+    text-align: center;
+  }
+  h1 { color: var(--fond); font-size: 1.7em; margin-bottom: 6px; }
+  .sous-titre { color: #7f8c9b; margin-bottom: 20px; font-size: 1em; }
+
+  .barre-haut {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 10px;
+  }
+  .pastille {
+    background: #f1f5ff;
+    border-radius: 14px;
+    padding: 8px 16px;
+    font-size: 1.1em;
+    color: var(--fond);
+    font-weight: bold;
+    min-width: 90px;
+  }
+  .pastille small { display: block; font-size: .6em; color: #7f8c9b; font-weight: normal; }
+  #temps { font-size: 1.4em; }
+  #temps.risque { color: var(--accent); animation: pulse .5s infinite alternate; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+  .portee {
+    background: #fffdf5;
+    border: 3px solid #e8e0c9;
+    border-radius: 16px;
+    padding: 4px 8px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .portee svg { width: 100%; height: auto; display: block; }
+
+  #retour {
+    height: 34px;
+    font-size: 1.15em;
+    font-weight: bold;
+    margin-bottom: 14px;
+    transition: transform .15s;
+  }
+  .bon { color: var(--vert); animation: rebond .4s; }
+  .mauvais { color: var(--accent); }
+  @keyframes rebond {
+    0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: scale(1); }
+  }
+
+  .boutons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .boutons button {
+    font-family: inherit;
+    font-size: 1.25em;
+    font-weight: bold;
+    padding: 14px 0;
+    border: none;
+    border-radius: 14px;
+    background: #eef3ff;
+    color: var(--fond);
+    cursor: pointer;
+    transition: transform .1s, background .15s;
+  }
+  .boutons button:hover { background: #dde7ff; transform: translateY(-2px); }
+  .boutons button:active { transform: scale(.95); }
+  .boutons button.oui { background: var(--vert); color: #fff; }
+  .boutons button.non { background: var(--accent); color: #fff; }
+
+  .gros-bouton {
+    font-family: inherit;
+    font-size: 1.3em;
+    font-weight: bold;
+    padding: 16px 42px;
+    border: none;
+    border-radius: 16px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #d94f4f;
+    transition: transform .1s;
+  }
+  .gros-bouton:active { transform: translateY(4px); box-shadow: 0 2px 0 #d94f4f; }
+
+  .ecran { display: none; }
+  .ecran.actif { display: block; }
+
+  #scoreFinal { font-size: 3.2em; color: var(--accent); margin: 10px 0; }
+  .stats { display: flex; justify-content: center; gap: 24px; margin: 14px 0 24px; color: var(--fond); }
+  .stats div strong { display: block; font-size: 1.6em; }
+  .stats div span { color: #7f8c9b; font-size: .85em; }
+  .record { color: #b8860b; font-weight: bold; margin-bottom: 10px; }
+
+  .regle {
+    background: #f1f5ff;
+    border-radius: 14px;
+    padding: 14px;
+    color: var(--fond);
+    text-align: left;
+    font-size: .95em;
+    margin: 18px 0;
+    line-height: 1.5;
+  }
+  .etiquette-note {
+    position: absolute;
+    background: var(--jaune);
+    color: var(--texte);
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: .9em;
+    pointer-events: none;
+    transition: opacity .3s;
+  }
+</style>
+</head>
+<body>
+
+<div class="carte">
+
+  <!-- Écran d'accueil -->
+  <div id="ecranAccueil" class="ecran actif">
+    <h1>🎵 Course aux Notes 🎵</h1>
+    <p class="sous-titre">Lis un maximum de notes en 30 secondes !</p>
+    <div class="portee">
+      <svg viewBox="0 0 400 130" id="svgDemo"></svg>
+    </div>
+    <div class="regle">
+      🔑 Voici la <strong>clé de sol</strong>.<br>
+      Chaque note a un nom : <strong>do, ré, mi, fa, sol, la, si</strong>.<br>
+      🏅 Bonne réponse = <strong>1 point</strong> &nbsp;|&nbsp; 🔥 5 bonnes réponses de suite = <strong>+1 bonus</strong> !<br>
+      ⏱ Tu as <strong>30 secondes</strong>. Prêt(e) ?
+    </div>
+    <button class="gros-bouton" onclick="demarrer()">C'est parti ! ▶</button>
+    <p class="sous-titre" style="margin-top:16px" id="meilleurAccueil"></p>
+  </div>
+
+  <!-- Écran de jeu -->
+  <div id="ecranJeu" class="ecran">
+    <div class="barre-haut">
+      <div class="pastille"><small>POINTS</small><span id="score">0</span></div>
+      <div class="pastille"><small>TEMPS</small><span id="temps">30</span></div>
+      <div class="pastille"><small>SÉRIE 🔥</small><span id="serie">0</span></div>
+    </div>
+    <div class="portee" id="cadrePortee">
+      <svg viewBox="0 0 400 130" id="svgJeu"></svg>
+      <div class="etiquette-note" id="etiquette" style="display:none"></div>
+    </div>
+    <div id="retour"></div>
+    <div class="boutons" id="boutons"></div>
+  </div>
+
+  <!-- Écran de fin -->
+  <div id="ecranFin" class="ecran">
+    <h1>⏰ Temps écoulé !</h1>
+    <div id="scoreFinal">0</div>
+    <p class="sous-titre" id="messageFin"></p>
+    <div class="record" id="recordFin"></div>
+    <div class="stats">
+      <div><strong id="nbBonnes">0</strong><span>Notes lues</span></div>
+      <div><strong id="nbErreurs">0</strong><span>Erreurs</span></div>
+      <div><strong id="meilleureSerie">0</strong><span>Meilleure série</span></div>
+    </div>
+    <button class="gros-bouton" onclick="demarrer()">Rejouer 🔄</button>
+    <button class="gros-bouton" style="background:#8395a7;box-shadow:0 6px 0 #6b7a8c;margin-left:8px" onclick="accueil()">Menu 🏠</button>
+  </div>
+
+</div>
+
+<script>
+const NOTES = ['do','ré','mi','fa','sol','la','si'];
+// Position sur la portée : 0 = ligne du bas (mi), -1 = sous la ligne (ré), -2 = interligne sous (do)
+// Chaque cran = un demi-interligne vers le haut. Portée affichée : do4 à sol5.
+const GAMME = [
+  { nom: 'do',  pos: -2 },  // do4  (sous la portée, petite ligne)
+  { nom: 'ré',  pos: -1 },
+  { nom: 'mi',  pos: 0 },
+  { nom: 'fa',  pos: 1 },
+  { nom: 'sol', pos: 2 },
+  { nom: 'la',  pos: 3 },
+  { nom: 'si',  pos: 4 },
+  { nom: 'do',  pos: 5 },  // do5
+  { nom: 'ré',  pos: 6 },
+  { nom: 'mi',  pos: 7 },
+  { nom: 'fa',  pos: 8 },
+  { nom: 'sol', pos: 9 },
+];
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const LARGEUR = 400, HAUTEUR = 130;
+const ESPACEMENT = 12;                    // distance entre deux lignes
+const LIGNE_BAS = 95;                     // y de la ligne du bas
+const X_NOTE = 250;
+
+let score = 0, serie = 0, meilleureSerie = 0, bonnes = 0, erreurs = 0;
+let tempsRestant = 30, chrono = null, noteActuelle = null, verrouille = false;
+
+const svgJeu = document.getElementById('svgJeu');
+const svgDemo = document.getElementById('svgDemo');
+
+function el(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function yDePos(pos) { return LIGNE_BAS - (pos * ESPACEMENT) / 2; }
+
+function dessinerPortee(svg, note) {
+  svg.innerHTML = '';
+  // 5 lignes
+  for (let i = 0; i < 5; i++) {
+    const y = LIGNE_BAS - i * ESPACEMENT;
+    svg.appendChild(el('line', { x1: 20, y1: y, x2: LARGEUR - 20, y2: y, stroke: '#2d3436', 'stroke-width': 2 }));
+  }
+  // Clé de sol (glyphe unicode)
+  const clef = el('text', {
+    x: 40, y: LIGNE_BAS - 3 * ESPACEMENT + 24,
+    'font-size': 92, fill: '#2d3436', 'font-family': 'serif'
+  });
+  clef.textContent = '\u{1D11E}';
+  svg.appendChild(clef);
+
+  if (!note) return;
+
+  const y = yDePos(note.pos);
+
+  // Petite ligne supplémentaire pour le do du bas
+  if (note.pos === -2) {
+    svg.appendChild(el('line', { x1: X_NOTE - 22, y1: y, x2: X_NOTE + 22, y2: y, stroke: '#2d3436', 'stroke-width': 2 }));
+  }
+
+  // La note
+  const cercle = el('ellipse', {
+    cx: X_NOTE, cy: y, rx: 13, ry: 9.5,
+    fill: '#ff6b6b', stroke: '#2d3436', 'stroke-width': 2,
+    transform: `rotate(-18 ${X_NOTE} ${y})`
+  });
+  cercle.id = 'noteCercle';
+  svg.appendChild(cercle);
+}
+
+function afficherDemo() {
+  dessinerPortee(svgDemo, { nom: 'sol', pos: 2 });
+  const et = document.getElementById('etiquette');
+  et.style.display = 'none';
+  const demoEtiquette = document.createElement('div');
+  demoEtiquette.className = 'etiquette-note';
+  demoEtiquette.textContent = 'sol';
+  demoEtiquette.style.left = '62%';
+  demoEtiquette.style.top = '30%';
+  document.querySelector('#ecranAccueil .portee').appendChild(demoEtiquette);
+}
+
+function ecran(id) {
+  document.querySelectorAll('.ecran').forEach(e => e.classList.remove('actif'));
+  document.getElementById(id).classList.add('actif');
+}
+
+function demarrer() {
+  score = 0; serie = 0; meilleureSerie = 0; bonnes = 0; erreurs = 0;
+  tempsRestant = 30; verrouille = false;
+  majScore(); majSerie(); majTemps();
+  construireBoutons();
+  ecran('ecranJeu');
+  nouvelleNote();
+  clearInterval(chrono);
+  chrono = setInterval(tic, 1000);
+}
+
+function accueil() {
+  clearInterval(chrono);
+  afficherRecord();
+  ecran('ecranAccueil');
+}
+
+function tic() {
+  tempsRestant--;
+  majTemps();
+  if (tempsRestant <= 0) fin();
+}
+
+function majTemps() {
+  const t = document.getElementById('temps');
+  t.textContent = tempsRestant;
+  t.classList.toggle('risque', tempsRestant <= 5);
+}
+
+function majScore() { document.getElementById('score').textContent = score; }
+function majSerie() { document.getElementById('serie').textContent = serie; }
+
+function nouvelleNote() {
+  verrouille = false;
+  noteActuelle = GAMME[Math.floor(Math.random() * GAMME.length)];
+  dessinerPortee(svgJeu, noteActuelle);
+  document.getElementById('retour').textContent = '';
+  document.getElementById('retour').className = '';
+}
+
+function construireBoutons() {
+  const cont = document.getElementById('boutons');
+  cont.innerHTML = '';
+  NOTES.forEach(n => {
+    const b = document.createElement('button');
+    b.textContent = n.charAt(0).toUpperCase() + n.slice(1);
+    b.dataset.nom = n;
+    b.onclick = () => repondre(b, n);
+    cont.appendChild(b);
+  });
+}
+
+function repondre(bouton, nom) {
+  if (verrouille) return;
+  verrouille = true;
+  const retour = document.getElementById('retour');
+  const et = document.getElementById('etiquette');
+
+  if (nom === noteActuelle.nom) {
+    bonnes++;
+    serie++;
+    let gain = 1;
+    if (serie > 0 && serie % 5 === 0) gain += 1;   // bonus de série
+    score += gain;
+    majScore(); majSerie();
+    meilleureSerie = Math.max(meilleureSerie, serie);
+    bouton.classList.add('oui');
+    retour.textContent = gain > 1 ? `Bravo ! +${gain} points 🔥` : 'Bravo ! +1 🎉';
+    retour.className = 'bon';
+    son(true);
+  } else {
+    erreurs++;
+    serie = 0;
+    majSerie();
+    bouton.classList.add('non');
+    retour.textContent = `C'était : ${noteActuelle.nom}`;
+    retour.className = 'mauvais';
+    son(false);
+  }
+
+  // Montrer le nom de la note sur la portée
+  const cercle = document.getElementById('noteCercle');
+  const rectSvg = svgJeu.getBoundingClientRect();
+  const rectCadre = document.getElementById('cadrePortee').getBoundingClientRect();
+  if (cercle) {
+    const cy = parseFloat(cercle.getAttribute('cy')) / HAUTEUR * rectSvg.height;
+    et.textContent = noteActuelle.nom;
+    et.style.display = 'block';
+    et.style.left = (rectSvg.left - rectCadre.left + rectSvg.width * (X_NOTE / LARGEUR) - 20) + 'px';
+    et.style.top = (rectSvg.top - rectCadre.top + cy - 36) + 'px';
+  }
+
+  setTimeout(() => {
+    bouton.classList.remove('oui', 'non');
+    et.style.display = 'none';
+    if (tempsRestant > 0) nouvelleNote();
+  }, 550);
+}
+
+function fin() {
+  clearInterval(chrono);
+  document.getElementById('scoreFinal').textContent = score;
+  document.getElementById('nbBonnes').textContent = bonnes;
+  document.getElementById('nbErreurs').textContent = erreurs;
+  document.getElementById('meilleureSerie').textContent = meilleureSerie;
+
+  const messages = [
+    [0,  'Continue de t\'entraîner, tu vas y arriver ! 💪'],
+    [8,  'Bien joué, continue comme ça ! 👍'],
+    [15, 'Super ! Tu lis bien tes notes ! 🌟'],
+    [25, 'Bravo, tu es un(e) champion(ne) des notes ! 🏆'],
+    [35, 'Incroyable ! Maestro !! 🎩🎶']
+  ];
+  let msg = messages[0][1];
+  for (const [seuil, m] of messages) if (score >= seuil) msg = m;
+  document.getElementById('messageFin').textContent = msg;
+
+  const record = Number(localStorage.getItem('recordNotes') || 0);
+  if (score > record) {
+    localStorage.setItem('recordNotes', score);
+    document.getElementById('recordFin').textContent = '🎉 Nouveau record !';
+  } else {
+    document.getElementById('recordFin').textContent = `Record : ${record} points`;
+  }
+  ecran('ecranFin');
+}
+
+function afficherRecord() {
+  const record = localStorage.getItem('recordNotes');
+  document.getElementById('meilleurAccueil').textContent =
+    record ? `⭐ Ton record : ${record} points` : '';
+}
+
+// Petits sons (WebAudio, aucun fichier nécessaire)
+let ctxAudio = null;
+function son(bon) {
+  try {
+    ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctxAudio.createOscillator();
+    const g = ctxAudio.createGain();
+    o.connect(g); g.connect(ctxAudio.destination);
+    o.type = 'sine';
+    if (bon) { o.frequency.value = 880; g.gain.value = .12; }
+    else { o.type = 'triangle'; o.frequency.value = 200; g.gain.value = .15; }
+    o.start();
+    o.stop(ctxAudio.currentTime + (bon ? .18 : .3));
+  } catch (e) {}
+}
+
+// Démarrage
+afficherDemo();
+afficherRecord();
+</script>
+</body>
+</html>
