@@ -297,6 +297,7 @@ function ecran(id) {
 }
 
 function demarrer() {
+  preparerAudio();
   score = 0; serie = 0; meilleureSerie = 0; bonnes = 0; erreurs = 0;
   tempsRestant = 60; verrouille = false;
   majScore(); majSerie(); majTemps();
@@ -432,6 +433,19 @@ function afficherRecord() {
 // Petits sons (WebAudio, aucun fichier nécessaire)
 let ctxAudio = null;
 
+// Créer et déverrouiller l'audio dès un clic de l'utilisateur (obligatoire sur iPad/Safari)
+function preparerAudio() {
+  try {
+    ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctxAudio.state === 'suspended') ctxAudio.resume();
+    const tampon = ctxAudio.createBuffer(1, 1, 22050);
+    const source = ctxAudio.createBufferSource();
+    source.buffer = tampon;
+    source.connect(ctxAudio.destination);
+    source.start(0);
+  } catch (e) {}
+}
+
 // Hauteur réelle de chaque note (clé de sol, do4 -> sol5)
 const FREQUENCES = {
   '-2': 261.63, '-1': 293.66, '0': 329.63, '1': 349.23, '2': 392.00,
@@ -441,24 +455,36 @@ const FREQUENCES = {
 
 function son(bon, frequence) {
   try {
-    ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
-    if (ctxAudio.state === 'suspended') ctxAudio.resume();
+    preparerAudio();
+    if (!ctxAudio) return;
     const t = ctxAudio.currentTime;
-    const o = ctxAudio.createOscillator();
     const g = ctxAudio.createGain();
-    o.connect(g); g.connect(ctxAudio.destination);
+    g.connect(ctxAudio.destination);
     if (bon) {
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.3, t + .02);
+      g.gain.exponentialRampToValueAtTime(.001, t + .9);
+      const o = ctxAudio.createOscillator();
       o.type = 'sine';
       o.frequency.value = frequence;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(.25, t + .02);
-      g.gain.exponentialRampToValueAtTime(.001, t + .9);
+      o.connect(g);
       o.start(t);
       o.stop(t + .9);
+      const harmonique = ctxAudio.createOscillator();
+      const gh = ctxAudio.createGain();
+      harmonique.type = 'triangle';
+      harmonique.frequency.value = frequence * 2;
+      gh.gain.value = .08;
+      harmonique.connect(gh);
+      gh.connect(ctxAudio.destination);
+      harmonique.start(t);
+      harmonique.stop(t + .5);
     } else {
+      const o = ctxAudio.createOscillator();
       o.type = 'triangle';
       o.frequency.value = 200;
       g.gain.value = .15;
+      o.connect(g);
       o.start(t);
       o.stop(t + .3);
     }
