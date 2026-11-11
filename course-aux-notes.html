@@ -82,14 +82,14 @@
 
   .boutons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
   }
   .boutons button {
     font-family: inherit;
-    font-size: 1.25em;
+    font-size: 1.05em;
     font-weight: bold;
-    padding: 14px 0;
+    padding: 12px 0;
     border: none;
     border-radius: 14px;
     background: #eef3ff;
@@ -99,6 +99,9 @@
   }
   .boutons button:hover { background: #dde7ff; transform: translateY(-2px); }
   .boutons button:active { transform: scale(.95); }
+  @media (max-width: 480px) {
+    .boutons button { font-size: .8em; padding: 10px 0; }
+  }
   .boutons button.oui { background: var(--vert); color: #fff; }
   .boutons button.non { background: var(--accent); color: #fff; }
 
@@ -203,7 +206,8 @@
 </div>
 
 <script>
-const NOTES = ['do','ré','mi','fa','sol','la','si'];
+// Une rangée façon clavier : le do revient à la fin (do aigu)
+const NOTES = ['do','ré','mi','fa','sol','la','si','do'];
 // Position sur la portée : 0 = ligne du bas (mi), -1 = sous la ligne (ré), -2 = interligne sous (do)
 // Chaque cran = un demi-interligne vers le haut. Portée affichée : do4 à sol5.
 const GAMME = [
