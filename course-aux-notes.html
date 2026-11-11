@@ -156,15 +156,15 @@
   <!-- Écran d'accueil -->
   <div id="ecranAccueil" class="ecran actif">
     <h1>🎵 Course aux Notes 🎵</h1>
-    <p class="sous-titre">Lis un maximum de notes en 30 secondes !</p>
+    <p class="sous-titre">Lis un maximum de notes en 1 minute !</p>
     <div class="portee">
       <svg viewBox="0 0 400 130" id="svgDemo"></svg>
     </div>
     <div class="regle">
-      🔑 Voici la <strong>clé de sol</strong>.<br>
+      🔑 Voici la <strong>clé de sol</strong>. Trouve la note et tu l'entendras ! 🎶<br>
       Chaque note a un nom : <strong>do, ré, mi, fa, sol, la, si</strong>.<br>
       🏅 Bonne réponse = <strong>1 point</strong> &nbsp;|&nbsp; 🔥 5 bonnes réponses de suite = <strong>+1 bonus</strong> !<br>
-      ⏱ Tu as <strong>30 secondes</strong>. Prêt(e) ?
+      ⏱ Tu as <strong>1 minute</strong>. Prêt(e) ?
     </div>
     <button class="gros-bouton" onclick="demarrer()">C'est parti ! ▶</button>
     <p class="sous-titre" style="margin-top:16px" id="meilleurAccueil"></p>
@@ -174,7 +174,7 @@
   <div id="ecranJeu" class="ecran">
     <div class="barre-haut">
       <div class="pastille"><small>POINTS</small><span id="score">0</span></div>
-      <div class="pastille"><small>TEMPS</small><span id="temps">30</span></div>
+      <div class="pastille"><small>TEMPS</small><span id="temps">60</span></div>
       <div class="pastille"><small>SÉRIE 🔥</small><span id="serie">0</span></div>
     </div>
     <div class="portee" id="cadrePortee">
@@ -228,7 +228,7 @@ const LIGNE_BAS = 95;                     // y de la ligne du bas
 const X_NOTE = 250;
 
 let score = 0, serie = 0, meilleureSerie = 0, bonnes = 0, erreurs = 0;
-let tempsRestant = 30, chrono = null, noteActuelle = null, verrouille = false;
+let tempsRestant = 60, chrono = null, noteActuelle = null, verrouille = false;
 
 const svgJeu = document.getElementById('svgJeu');
 const svgDemo = document.getElementById('svgDemo');
@@ -294,7 +294,7 @@ function ecran(id) {
 
 function demarrer() {
   score = 0; serie = 0; meilleureSerie = 0; bonnes = 0; erreurs = 0;
-  tempsRestant = 30; verrouille = false;
+  tempsRestant = 60; verrouille = false;
   majScore(); majSerie(); majTemps();
   construireBoutons();
   ecran('ecranJeu');
@@ -361,7 +361,7 @@ function repondre(bouton, nom) {
     bouton.classList.add('oui');
     retour.textContent = gain > 1 ? `Bravo ! +${gain} points 🔥` : 'Bravo ! +1 🎉';
     retour.className = 'bon';
-    son(true);
+    son(true, FREQUENCES[noteActuelle.pos]);
   } else {
     erreurs++;
     serie = 0;
@@ -427,17 +427,37 @@ function afficherRecord() {
 
 // Petits sons (WebAudio, aucun fichier nécessaire)
 let ctxAudio = null;
-function son(bon) {
+
+// Hauteur réelle de chaque note (clé de sol, do4 -> sol5)
+const FREQUENCES = {
+  '-2': 261.63, '-1': 293.66, '0': 329.63, '1': 349.23, '2': 392.00,
+  '3': 440.00, '4': 493.88, '5': 523.25, '6': 587.33, '7': 659.25,
+  '8': 698.46, '9': 783.99
+};
+
+function son(bon, frequence) {
   try {
     ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctxAudio.state === 'suspended') ctxAudio.resume();
+    const t = ctxAudio.currentTime;
     const o = ctxAudio.createOscillator();
     const g = ctxAudio.createGain();
     o.connect(g); g.connect(ctxAudio.destination);
-    o.type = 'sine';
-    if (bon) { o.frequency.value = 880; g.gain.value = .12; }
-    else { o.type = 'triangle'; o.frequency.value = 200; g.gain.value = .15; }
-    o.start();
-    o.stop(ctxAudio.currentTime + (bon ? .18 : .3));
+    if (bon) {
+      o.type = 'sine';
+      o.frequency.value = frequence;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.25, t + .02);
+      g.gain.exponentialRampToValueAtTime(.001, t + .9);
+      o.start(t);
+      o.stop(t + .9);
+    } else {
+      o.type = 'triangle';
+      o.frequency.value = 200;
+      g.gain.value = .15;
+      o.start(t);
+      o.stop(t + .3);
+    }
   } catch (e) {}
 }
 
